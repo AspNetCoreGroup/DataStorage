@@ -2,6 +2,8 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using DataStorageCore.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +14,7 @@ public partial class EnergyContext : DbContext
     public EnergyContext(DbContextOptions<EnergyContext> options)
         : base(options)
     {
-        //Database.EnsureDeleted();
+        Database.EnsureDeleted();
         Database.EnsureCreated();
     }
 
@@ -73,6 +75,13 @@ public partial class EnergyContext : DbContext
             entity.Property(e => e.Name)
                 .IsRequired()
                 .HasMaxLength(50);
+
+            List<DeviceType> deviceTypelist = new (); 
+            foreach (var devType in CommonTypeDevice.Property.DeviceType.dictionary)
+            {
+                deviceTypelist.Add(new DeviceType { Id = devType.Key, Name = devType.Value });
+            }
+            entity.HasData(deviceTypelist);
         });
 
         modelBuilder.Entity<Event>(entity =>
@@ -104,6 +113,13 @@ public partial class EnergyContext : DbContext
                 .IsRequired()
                 .HasMaxLength(255)
                 .IsFixedLength();
+
+            List<EventDict> eventTypelist = new();
+            foreach (var eventType in CommonTypeDevice.Event.EventDictionary.dictionary)
+            {
+                eventTypelist.Add(new EventDict { Id = eventType.Key, Name = eventType.Value });
+            }
+            entity.HasData(eventTypelist);
         });
 
         modelBuilder.Entity<Measurement>(entity =>

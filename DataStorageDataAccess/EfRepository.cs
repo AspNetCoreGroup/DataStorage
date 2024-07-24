@@ -1,6 +1,7 @@
 ﻿using DataStorageCore.Repositories;
 using DataStorageDataAccess.DataBaseContext;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace DataStorageDataAccess
 {
@@ -15,9 +16,10 @@ namespace DataStorageDataAccess
             _datacontext = datacontext;
             Data = _datacontext.Set<T>();
         }
-        public Task AddAsync(T entity)
+        public async Task AddAsync(T entity)
         {
-            throw new NotImplementedException();
+            await Data.AddAsync(entity);
+            await _datacontext.SaveChangesAsync();
         }
 
         public Task DeleteAsync(int id)
@@ -38,6 +40,11 @@ namespace DataStorageDataAccess
         public Task UpdateAsync(T entity)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await Data.FirstOrDefaultAsync(predicate);
         }
     }
 }

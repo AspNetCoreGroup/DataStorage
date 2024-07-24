@@ -1,4 +1,6 @@
-﻿namespace DataStorageCore.Repositories
+﻿using System.Linq.Expressions;
+
+namespace DataStorageCore.Repositories
 {
     public interface IRepository<T>
     {
@@ -7,5 +9,6 @@
         Task AddAsync(T entity);
         Task UpdateAsync(T entity);
         Task DeleteAsync(int id);
+        Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
     }
 }
