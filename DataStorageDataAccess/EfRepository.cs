@@ -20,6 +20,7 @@ namespace DataStorageDataAccess
         {
             await Data.AddAsync(entity);
             await _datacontext.SaveChangesAsync();
+            //await Data.FirstOrDefaultAsync(x=>entity.Equals);
         }
 
         public Task DeleteAsync(int id)
