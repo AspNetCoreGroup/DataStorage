@@ -150,6 +150,13 @@ public partial class EnergyContext : DbContext
                 .IsRequired()
                 .HasMaxLength(255)
                 .IsFixedLength();
+
+            List<MeasurementDict> measurementDictList = new();
+            foreach (var devType in CommonTypeDevice.Measurument.MeasurementDictionary.dictionary)
+            {
+                measurementDictList.Add(new MeasurementDict { Id = devType.Key, Name = devType.Value });
+            }
+            entity.HasData(measurementDictList);
         });
 
         OnModelCreatingPartial(modelBuilder);

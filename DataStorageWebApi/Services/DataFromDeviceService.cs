@@ -1,20 +1,24 @@
 ﻿using CommonTypeDevice;
 using DataStorageCore.Models;
 using DataStorageCore.Repositories;
-using DataStorageDataAccess;
 
 namespace DataStorageWebApi.Services
 {
     public class DataFromDeviceService : IDataFromDeviceService
     {
 
-        public async Task<bool> WriteToDbAsync(DeviceData deviceData, IRepository<Device> deviceRepository, IRepository<Event> eventRepository)
+        public async Task<bool> WriteToDbAsync(DeviceData deviceData,
+                                                IRepository<Device> deviceRepository,
+                                                IRepository<Event> eventRepository,
+                                                IRepository<Measurement> measurementRepository,
+                                                IRepository<Archive> archiveRepository)
         {
             Device? device = await CheckDeviceAsync(deviceData, deviceRepository);
 
             if (device != null)
             {
                 await EventParseAsync(deviceData, device, eventRepository);
+                await MeasureParseAsync(deviceData, device, measurementRepository, archiveRepository);
                 return true;
             }
             return false;
@@ -98,6 +102,39 @@ namespace DataStorageWebApi.Services
                     }
                 }
             }
+            return true;
+        }
+
+        public async Task<bool> MeasureParseAsync(DeviceData deviceData, Device device, IRepository<Measurement> measurementRepository, IRepository<Archive> archiveRepository)
+        {
+            if (deviceData.Measurements != null)
+            {
+                foreach (var deviceMeasurement in deviceData.Measurements)
+                {
+                    var measureFromDB = await measurementRepository.FirstOrDefaultAsync(x => x.DeviceId == device.Id && x.MeasurumentDictId == deviceMeasurement.MeasurumentId);
+                    if (measureFromDB == null)
+                    {
+                        await measurementRepository.AddAsync(new Measurement
+                        {
+                            DeviceId = device.Id,
+                            MeasurumentDictId = deviceMeasurement.MeasurumentId
+                        });
+                        measureFromDB = await measurementRepository.FirstOrDefaultAsync(x => x.DeviceId == device.Id && x.MeasurumentDictId == deviceMeasurement.MeasurumentId);
+                    }
+
+                    if (measureFromDB != null)
+                    {
+                        await archiveRepository.AddAsync(new Archive
+                        {
+                            MeasurumentId = measureFromDB.Id,
+                            Dt = deviceMeasurement.DateTime,
+                            Value = deviceMeasurement.Value
+                        });
+                    }
+
+                }
+            }
+
             return true;
         }
     }
