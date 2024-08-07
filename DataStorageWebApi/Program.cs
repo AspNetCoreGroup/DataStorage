@@ -14,9 +14,10 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<EnergyContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("SQLConnectionString"));
+    
     options.UseLowerCaseNamingConvention();
 });
-
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 builder.Services.AddScoped(typeof(DbContext), typeof(EnergyContext));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 builder.Services.AddScoped(typeof(IDataFromDeviceService), typeof(DataFromDeviceService));

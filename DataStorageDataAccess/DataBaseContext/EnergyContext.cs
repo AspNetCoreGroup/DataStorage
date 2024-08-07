@@ -14,7 +14,7 @@ public partial class EnergyContext : DbContext
     public EnergyContext(DbContextOptions<EnergyContext> options)
         : base(options)
     {
-        //Database.EnsureDeleted();
+        Database.EnsureDeleted();
         Database.EnsureCreated();
     }
 
