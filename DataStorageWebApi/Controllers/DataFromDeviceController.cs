@@ -2,6 +2,7 @@ using CommonTypeDevice;
 using CommonTypeDevice.MeasurumentData;
 using DataStorageCore.Models;
 using DataStorageCore.Repositories;
+using DataStorageWebApi.Models;
 using DataStorageWebApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,11 +38,11 @@ namespace DataStorageWebApi.Controllers
             return Ok();
         }
 
-        [HttpGet]
-        public async Task<ActionResult<List<MeasurementData>>> DeviceArchiveById(int id)
+        [HttpPost("DeviceArchiveById")]
+        public async Task<ActionResult<List<MeasurementData>>> DeviceArchiveById([FromBody] GetMeasurementsRequest measurementsRequest)
         {
-            var t = await dataFromDeviceService.GetDeviceArchiveById(id, measurementRepository, archiveRepository);
-            return Ok();
+            var archives = await dataFromDeviceService.GetDeviceArchiveById(measurementsRequest, measurementRepository, archiveRepository);
+            return Ok(archives);
         }
     }
 }

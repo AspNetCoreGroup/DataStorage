@@ -2,6 +2,7 @@
 using CommonTypeDevice.MeasurumentData;
 using DataStorageCore.Models;
 using DataStorageCore.Repositories;
+using DataStorageWebApi.Models;
 
 namespace DataStorageWebApi.Services
 {
@@ -110,39 +111,68 @@ namespace DataStorageWebApi.Services
         {
             if (deviceData.Measurements != null)
             {
-                foreach (var deviceMeasurement in deviceData.Measurements)
+                var measurementDistinctList = deviceData.Measurements.DistinctBy(x => x.MeasurumentId).ToList();
+                foreach (var measurementDistinct in measurementDistinctList)
                 {
-                    var measureFromDB = await measurementRepository.FirstOrDefaultAsync(x => x.DeviceId == device.Id && x.MeasurumentDictId == deviceMeasurement.MeasurumentId);
+                    var measureFromDB = await measurementRepository.FirstOrDefaultAsync(x => x.DeviceId == device.Id && x.MeasurumentDictId == measurementDistinct.MeasurumentId);
                     if (measureFromDB == null)
                     {
                         await measurementRepository.AddAsync(new Measurement
                         {
                             DeviceId = device.Id,
-                            MeasurumentDictId = deviceMeasurement.MeasurumentId
+                            MeasurumentDictId = measurementDistinct.MeasurumentId
                         });
-                        measureFromDB = await measurementRepository.FirstOrDefaultAsync(x => x.DeviceId == device.Id && x.MeasurumentDictId == deviceMeasurement.MeasurumentId);
+                        measureFromDB = await measurementRepository.FirstOrDefaultAsync(x => x.DeviceId == device.Id && x.MeasurumentDictId == measurementDistinct.MeasurumentId);
                     }
 
-                    if (measureFromDB != null)
+                    var measList = deviceData.Measurements.Where(x => x.MeasurumentId == measurementDistinct.MeasurumentId).ToList();
+                    if (measList.Count > 0)
                     {
-                        await archiveRepository.AddAsync(new Archive
+                        List<Archive> archivelist = new();
+                        foreach (var meas in measList)
                         {
-                            MeasurumentId = measureFromDB.Id,
-                            Dt = deviceMeasurement.DateTime,
-                            Value = deviceMeasurement.Value
-                        });
+                            archivelist.Add(new Archive
+                            {
+                                MeasurumentId = measureFromDB.Id,
+                                Dt = meas.DateTime,
+                                Value = meas.Value
+                            });
+                        }
+
+                        await archiveRepository.AddRangeAsync(archivelist);
                     }
+
 
                 }
+
+
             }
 
             return true;
         }
 
-        public  async Task<List<MeasurementData>> GetDeviceArchiveById(int id, IRepository<Measurement> measurementRepository,
-                                                                    IRepository<Archive> archiveRepository)
+        public async Task<List<MeasurementData>> GetDeviceArchiveById(GetMeasurementsRequest measurementsRequest, IRepository<Measurement> measurementRepository,
+                                                                              IRepository<Archive> archiveRepository)
         {
-            List<MeasurementData> measurementDatas = new ();
+            List<MeasurementData> measurementDatas = new();
+
+            var measuruments = await measurementRepository.WhereAsync(x => x.DeviceId == measurementsRequest.DeviceID);
+            foreach (var meas in measuruments)
+            {
+                var archives = await archiveRepository.WhereAsync(x => (x.MeasurumentId == meas.Id) &&
+                                                                       (x.Dt < measurementsRequest.MaxDate) && 
+                                                                       (x.Dt > measurementsRequest.MinDate));
+                foreach (var arc in archives)
+                {
+                    measurementDatas.Add(new MeasurementData
+                    {
+                        MeasurumentId = arc.Measurument.MeasurumentDictId,
+                        DateTime = arc.Dt,
+                        Value = arc.Value
+                    });
+                }
+
+            }
             return measurementDatas;
             //return await measurementRepository.WhereAsync(x=>x.DeviceId == id);
         }

@@ -54,5 +54,10 @@ namespace DataStorageDataAccess
             return await Data.Where(predicate).ToListAsync();
         }
 
+        public async Task AddRangeAsync(IEnumerable<T> entity)
+        {
+            await Data.AddRangeAsync(entity);
+            await _datacontext.SaveChangesAsync();
+        }
     }
 }
