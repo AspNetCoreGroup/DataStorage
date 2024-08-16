@@ -16,5 +16,6 @@ namespace DataStorageWebApi.Services
         public Task<List<MeasurementData>> GetDeviceArchiveById(GetMeasurementsRequest measurementsRequest,
                                                                 IRepository<Measurement> measurementRepository,
                                                                 IRepository<Archive> archiveRepository);
+        public List<MeasurumentIdDescription> GetMeasurumentIdDescriptions();
     }
 }

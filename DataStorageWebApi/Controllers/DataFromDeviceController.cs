@@ -44,5 +44,12 @@ namespace DataStorageWebApi.Controllers
             var archives = await dataFromDeviceService.GetDeviceArchiveById(measurementsRequest, measurementRepository, archiveRepository);
             return Ok(archives);
         }
+
+        [HttpGet("MeasurumentIdDescription")]
+        public async Task<ActionResult<List<MeasurumentIdDescription>>> MeasurumentIdDescription()
+        {
+            var descriptions = dataFromDeviceService.GetMeasurumentIdDescriptions();
+            return Ok(descriptions);
+        }
     }
 }

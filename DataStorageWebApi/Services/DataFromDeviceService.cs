@@ -160,7 +160,7 @@ namespace DataStorageWebApi.Services
             foreach (var meas in measuruments)
             {
                 var archives = await archiveRepository.WhereAsync(x => (x.MeasurumentId == meas.Id) &&
-                                                                       (x.Dt < measurementsRequest.MaxDate) && 
+                                                                       (x.Dt < measurementsRequest.MaxDate) &&
                                                                        (x.Dt > measurementsRequest.MinDate));
                 foreach (var arc in archives)
                 {
@@ -175,6 +175,40 @@ namespace DataStorageWebApi.Services
             }
             return measurementDatas;
             //return await measurementRepository.WhereAsync(x=>x.DeviceId == id);
+        }
+
+        public List<MeasurumentIdDescription> GetMeasurumentIdDescriptions()
+        {
+            List<MeasurumentIdDescription> measurumentIdDescriptions = new();
+
+            measurumentIdDescriptions.Add(new MeasurumentIdDescription
+            {
+                MeasurumentId = 1,
+                MeasurumentShortDescription = "A+",
+                MeasurumentDescription = "Энергия активная прямого направления"
+            });
+
+            measurumentIdDescriptions.Add(new MeasurumentIdDescription
+            {
+                MeasurumentId = 2,
+                MeasurumentShortDescription = "A-",
+                MeasurumentDescription = "Энергия активная обратного отправления"
+            });
+
+            measurumentIdDescriptions.Add(new MeasurumentIdDescription
+            {
+                MeasurumentId = 3,
+                MeasurumentShortDescription = "R+",
+                MeasurumentDescription = "Энергия реактивная прямого направления"
+            });
+
+            measurumentIdDescriptions.Add(new MeasurumentIdDescription
+            {
+                MeasurumentId = 4,
+                MeasurumentShortDescription = "R-",
+                MeasurumentDescription = "Энергия реактивная обратного отправления"
+            });
+            return measurumentIdDescriptions;
         }
     }
 }
