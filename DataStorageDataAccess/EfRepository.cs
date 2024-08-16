@@ -1,11 +1,12 @@
-﻿using DataStorageCore.Repositories;
+﻿using DataStorageCore.Domain;
+using DataStorageCore.Repositories;
 using DataStorageDataAccess.DataBaseContext;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace DataStorageDataAccess
 {
-    public class EfRepository<T> : IRepository<T> where T : class
+    public class EfRepository<T> : IRepository<T> where T : BaseEntity
     {
         protected readonly EnergyContext _datacontext;
         protected DbSet<T> Data;
@@ -33,9 +34,9 @@ namespace DataStorageDataAccess
             return await Data.ToListAsync();
         }
 
-        public Task<T> GetByIdAsync(int id)
+        public async Task<T?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await Data.FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public Task UpdateAsync(T entity)
@@ -47,5 +48,11 @@ namespace DataStorageDataAccess
         {
             return await Data.FirstOrDefaultAsync(predicate);
         }
+
+        public async Task<List<T>> WhereAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await Data.Where(predicate).ToListAsync();
+        }
+
     }
 }

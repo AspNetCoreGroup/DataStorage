@@ -14,7 +14,7 @@ public partial class EnergyContext : DbContext
     public EnergyContext(DbContextOptions<EnergyContext> options)
         : base(options)
     {
-        Database.EnsureDeleted();
+        //Database.EnsureDeleted();
         Database.EnsureCreated();
     }
 
@@ -152,7 +152,7 @@ public partial class EnergyContext : DbContext
                 .IsFixedLength();
 
             List<MeasurementDict> measurementDictList = new();
-            foreach (var devType in CommonTypeDevice.Measurument.MeasurementDictionary.dictionary)
+            foreach (var devType in CommonTypeDevice.MeasurumentData.MeasurementDictionary.dictionary)
             {
                 measurementDictList.Add(new MeasurementDict { Id = devType.Key, Name = devType.Value });
             }

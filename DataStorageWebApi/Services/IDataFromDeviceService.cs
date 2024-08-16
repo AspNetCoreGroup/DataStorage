@@ -1,4 +1,5 @@
 ﻿using CommonTypeDevice;
+using CommonTypeDevice.MeasurumentData;
 using DataStorageCore.Models;
 using DataStorageCore.Repositories;
 
@@ -11,5 +12,7 @@ namespace DataStorageWebApi.Services
                                          IRepository<Event> eventRepository,
                                          IRepository<Measurement> measurementRepository,
                                          IRepository<Archive> archiveRepository);
+        public Task<List<MeasurementData>> GetDeviceArchiveById(int id, IRepository<Measurement> measurementRepository,
+                                                                         IRepository<Archive> archiveRepository);
     }
 }

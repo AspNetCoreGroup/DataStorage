@@ -1,4 +1,5 @@
 using CommonTypeDevice;
+using CommonTypeDevice.MeasurumentData;
 using DataStorageCore.Models;
 using DataStorageCore.Repositories;
 using DataStorageWebApi.Services;
@@ -33,6 +34,13 @@ namespace DataStorageWebApi.Controllers
         public async Task<IActionResult> WriteDataFromDeviceAsync([FromBody] DeviceData deviceData)
         {
             await dataFromDeviceService.WriteToDbAsync(deviceData, deviceRepository, eventRepository, measurementRepository, archiveRepository);
+            return Ok();
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<List<MeasurementData>>> DeviceArchiveById(int id)
+        {
+            var t = await dataFromDeviceService.GetDeviceArchiveById(id, measurementRepository, archiveRepository);
             return Ok();
         }
     }

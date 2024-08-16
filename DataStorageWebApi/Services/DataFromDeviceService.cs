@@ -1,4 +1,5 @@
 ﻿using CommonTypeDevice;
+using CommonTypeDevice.MeasurumentData;
 using DataStorageCore.Models;
 using DataStorageCore.Repositories;
 
@@ -136,6 +137,14 @@ namespace DataStorageWebApi.Services
             }
 
             return true;
+        }
+
+        public  async Task<List<MeasurementData>> GetDeviceArchiveById(int id, IRepository<Measurement> measurementRepository,
+                                                                    IRepository<Archive> archiveRepository)
+        {
+            List<MeasurementData> measurementDatas = new ();
+            return measurementDatas;
+            //return await measurementRepository.WhereAsync(x=>x.DeviceId == id);
         }
     }
 }
