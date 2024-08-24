@@ -1,32 +1,40 @@
 ﻿using CommonTypeDevice;
 using CommonTypeDevice.MeasurumentData;
+using CommonTypeDevice.RMQMessages;
 using DataStorageCore.Models;
 using DataStorageCore.Repositories;
 using DataStorageWebApi.Models;
+using RabbitMQ.Client;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace DataStorageWebApi.Services
 {
     public class DataFromDeviceService : IDataFromDeviceService
     {
 
+
         public async Task<bool> WriteToDbAsync(DeviceData deviceData,
                                                 IRepository<Device> deviceRepository,
+                                                IRepository<DeviceType> deviceTypeRepository,
                                                 IRepository<Event> eventRepository,
                                                 IRepository<Measurement> measurementRepository,
-                                                IRepository<Archive> archiveRepository)
+                                                IRepository<Archive> archiveRepository,
+                                                IRepository<EventDict> eventDictRepository)
         {
-            Device? device = await CheckDeviceAsync(deviceData, deviceRepository);
+            Device? device = await CheckDeviceAsync(deviceData, deviceRepository, deviceTypeRepository);
 
             if (device != null)
             {
-                await EventParseAsync(deviceData, device, eventRepository);
+                await EventParseAsync(deviceData, device, eventRepository, eventDictRepository);
                 await MeasureParseAsync(deviceData, device, measurementRepository, archiveRepository);
                 return true;
             }
             return false;
         }
 
-        public async Task<Device?> CheckDeviceAsync(DeviceData deviceData, IRepository<Device> deviceRepository)
+        public async Task<Device?> CheckDeviceAsync(DeviceData deviceData, IRepository<Device> deviceRepository, IRepository<DeviceType> deviceTypeRepository)
         {
             string devNum = "";
             int devType = 0;
@@ -75,14 +83,65 @@ namespace DataStorageWebApi.Services
                     });
 
                     device = await deviceRepository.FirstOrDefaultAsync(x => x.SerialNumber == devNum);
+                    if (device != null)
+                    {
+                        var deviceType = await deviceTypeRepository.GetByIdAsync(device.Id);
+                        device.DeviceType = deviceType;
+                        NewDeviceMessage(device);
+                    }
+
                 }
             }
 
             return device;
         }
 
+        public bool NewDeviceMessage(Device? device)
+        {
+            if (device is null)
+            {
+                return false;
+            }
+            var factory = new ConnectionFactory()
+            {
+                HostName = "localhost",
+                Port = 5672,
+                UserName = "guest",
+                Password = "guest",
+            };
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                DeviceMessage deviceMessage = new DeviceMessage
+                {
+                    DeviceId = device.Id,
+                    DeviceType = device.DeviceType.Name,
+                    NetAddress = device.NetAdress,
+                    SerialNumber = device.SerialNumber
+                };
+                string jsonString = JsonSerializer.Serialize(deviceMessage, new JsonSerializerOptions
+                {
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                    WriteIndented = true
+                });
+                channel.QueueDeclare(queue: "FromDataStorage-queue",
+                                                 durable: true,
+                                                 autoDelete: false,
+                                                 exclusive: false,
+                                                 arguments: null);
 
-        public async Task<bool> EventParseAsync(DeviceData deviceData, Device device, IRepository<Event> eventRepository)
+                var body = Encoding.UTF8.GetBytes(jsonString);
+
+                channel.BasicPublish(exchange: "", routingKey: "FromDataStorage-queue", basicProperties: null, body: body);
+
+                Console.WriteLine(deviceMessage + " - sended");
+            }
+            return true;
+        }
+
+
+
+        public async Task<bool> EventParseAsync(DeviceData deviceData, Device device, IRepository<Event> eventRepository, IRepository<EventDict> eventDictRepository)
         {
             if (deviceData.DeviceEvents != null)
             {
@@ -99,6 +158,24 @@ namespace DataStorageWebApi.Services
                                 EventDictId = eventParam.Key,
                                 Dt = deviceEvent.DateTime
                             });
+
+                            var eventFromDb = await eventRepository.FirstOrDefaultAsync(x => x.DeviceId == device.Id &&
+                                                                                        x.EventDictId == eventParam.Key &&
+                                                                                        x.Dt == deviceEvent.DateTime);
+
+                            
+                            if (eventFromDb != null)
+                            {
+                                var eventDict = await eventDictRepository.GetByIdAsync(eventFromDb.EventDictId);
+                                if (eventDict != null)
+                                {
+                                    eventFromDb.Device = device;
+                                    eventFromDb.EventDict = eventDict;
+                                    NewEventMessage(eventFromDb);
+                                }
+                                
+                            }
+
                         }
 
                     }
@@ -107,6 +184,52 @@ namespace DataStorageWebApi.Services
             return true;
         }
 
+        public bool NewEventMessage(Event? eventFromDb)
+        {
+            if (eventFromDb is null)
+            {
+                return false;
+            }
+            var factory = new ConnectionFactory()
+            {
+                HostName = "localhost",
+                Port = 5672,
+                UserName = "guest",
+                Password = "guest",
+            };
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                EventMessage eventMessage = new EventMessage
+                {
+                    EventName = eventFromDb.EventDict.Name,
+                    Dt = eventFromDb.Dt,
+                    DeviceId = eventFromDb.DeviceId,
+                    DeviceSerial = eventFromDb.Device.SerialNumber,
+                    DeviceType = eventFromDb.Device.DeviceType.Name
+
+
+
+                };
+                string jsonString = JsonSerializer.Serialize(eventMessage, new JsonSerializerOptions
+                {
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                    WriteIndented = true
+                });
+                channel.QueueDeclare(queue: "FromDataStorage-queue",
+                                                 durable: true,
+                                                 autoDelete: false,
+                                                 exclusive: false,
+                                                 arguments: null);
+
+                var body = Encoding.UTF8.GetBytes(jsonString);
+
+                channel.BasicPublish(exchange: "", routingKey: "FromDataStorage-queue", basicProperties: null, body: body);
+
+                Console.WriteLine(eventMessage + " - sended");
+            }
+            return true;
+        }
         public async Task<bool> MeasureParseAsync(DeviceData deviceData, Device device, IRepository<Measurement> measurementRepository, IRepository<Archive> archiveRepository)
         {
             if (deviceData.Measurements != null)

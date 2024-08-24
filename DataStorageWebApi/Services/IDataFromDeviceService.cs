@@ -10,9 +10,11 @@ namespace DataStorageWebApi.Services
     {
         public Task<bool> WriteToDbAsync(DeviceData deviceData,
                                          IRepository<Device> deviceRepository,
+                                         IRepository<DeviceType> deviceTypeRepository,
                                          IRepository<Event> eventRepository,
                                          IRepository<Measurement> measurementRepository,
-                                         IRepository<Archive> archiveRepository);
+                                         IRepository<Archive> archiveRepository,
+                                         IRepository<EventDict> eventDictRepository);
         public Task<List<MeasurementData>> GetDeviceArchiveById(GetMeasurementsRequest measurementsRequest,
                                                                 IRepository<Measurement> measurementRepository,
                                                                 IRepository<Archive> archiveRepository);

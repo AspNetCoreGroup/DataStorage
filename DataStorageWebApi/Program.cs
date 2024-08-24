@@ -3,6 +3,7 @@ using DataStorageCore.Repositories;
 using DataStorageDataAccess;
 using DataStorageDataAccess.DataBaseContext;
 using DataStorageWebApi.Services;
+using DataStorageWebApi.TaskManager;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,11 +14,14 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<EnergyContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("SQLConnectionString"));
-    
+    options.UseNpgsql(Environment.GetEnvironmentVariable("ConnectionStrings__SQLConnectionString") ??
+                      builder.Configuration.GetConnectionString("SQLConnectionString") ??
+                      throw new Exception("No connection string to sql database"));
+
     options.UseLowerCaseNamingConvention();
 });
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+builder.Services.AddSingleton(typeof(ITaskManager), typeof(TaskManager));
 builder.Services.AddScoped(typeof(DbContext), typeof(EnergyContext));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 builder.Services.AddScoped(typeof(IDataFromDeviceService), typeof(DataFromDeviceService));

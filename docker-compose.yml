@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:latest
+    hostname: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+      
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # для подключения клиентов RabbitMQ
+      - "15672:15672"  # для подключения к веб-интерфейсу управления
+    environment:
+      RABBITMQ_DEFAULT_USER: guest  # замените на ваше имя пользователя
+      RABBITMQ_DEFAULT_PASS: guest  # замените на ваш пароль
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      
+volumes:
+  pg-data:
+  rabbitmq_data:
+  
+networks:
+  default:
+    name: myLocalNetwork # создана извне: docker network create --driver=bridge myLocalNetwork
+    external: true    
