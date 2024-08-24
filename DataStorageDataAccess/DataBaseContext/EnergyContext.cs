@@ -111,8 +111,8 @@ public partial class EnergyContext : DbContext
                 .HasColumnName("id");
             entity.Property(e => e.Name)
                 .IsRequired()
-                .HasMaxLength(255)
-                .IsFixedLength();
+                .HasMaxLength(255);
+                
 
             List<EventDict> eventTypelist = new();
             foreach (var eventType in CommonTypeDevice.Event.EventDictionary.dictionary)
@@ -148,8 +148,8 @@ public partial class EnergyContext : DbContext
                 .HasColumnName("id");
             entity.Property(e => e.Name)
                 .IsRequired()
-                .HasMaxLength(255)
-                .IsFixedLength();
+                .HasMaxLength(255);
+                
 
             List<MeasurementDict> measurementDictList = new();
             foreach (var devType in CommonTypeDevice.MeasurumentData.MeasurementDictionary.dictionary)

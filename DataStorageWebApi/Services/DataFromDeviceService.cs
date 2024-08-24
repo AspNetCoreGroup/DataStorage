@@ -85,11 +85,15 @@ namespace DataStorageWebApi.Services
                     device = await deviceRepository.FirstOrDefaultAsync(x => x.SerialNumber == devNum);
                     if (device != null)
                     {
-                        var deviceType = await deviceTypeRepository.GetByIdAsync(device.Id);
+                        var deviceType = await deviceTypeRepository.GetByIdAsync(device.DeviceTypeId);
                         device.DeviceType = deviceType;
                         NewDeviceMessage(device);
                     }
-
+                }
+                else
+                {
+                    var deviceType = await deviceTypeRepository.GetByIdAsync(device.DeviceTypeId);
+                    device.DeviceType = deviceType;
                 }
             }
 
@@ -134,7 +138,7 @@ namespace DataStorageWebApi.Services
 
                 channel.BasicPublish(exchange: "", routingKey: "FromDataStorage-queue", basicProperties: null, body: body);
 
-                Console.WriteLine(deviceMessage + " - sended");
+                //Console.WriteLine(deviceMessage + " - sended");
             }
             return true;
         }
@@ -226,7 +230,7 @@ namespace DataStorageWebApi.Services
 
                 channel.BasicPublish(exchange: "", routingKey: "FromDataStorage-queue", basicProperties: null, body: body);
 
-                Console.WriteLine(eventMessage + " - sended");
+                //Console.WriteLine(eventMessage + " - sended");
             }
             return true;
         }
