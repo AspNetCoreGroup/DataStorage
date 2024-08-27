@@ -13,7 +13,16 @@ namespace DataStorageWebApi.Services
 {
     public class DataFromDeviceService : IDataFromDeviceService
     {
+        private string RMQHost;
+        private readonly ILogger logger;
+        public DataFromDeviceService(ILogger<DataFromDeviceService> logger)
+        {
+            RMQHost = Environment.GetEnvironmentVariable("ConnectionStrings__RMQHost") ?? "localhost";
 
+
+            this.logger = logger;
+            logger.LogInformation("RMQHost: " + RMQHost + "!!!!!!!");
+        }
 
         public async Task<bool> WriteToDbAsync(DeviceData deviceData,
                                                 IRepository<Device> deviceRepository,
@@ -108,7 +117,7 @@ namespace DataStorageWebApi.Services
             }
             var factory = new ConnectionFactory()
             {
-                HostName = "localhost",
+                HostName = RMQHost,
                 Port = 5672,
                 UserName = "guest",
                 Password = "guest",
@@ -138,7 +147,7 @@ namespace DataStorageWebApi.Services
 
                 channel.BasicPublish(exchange: "", routingKey: "FromDataStorage-queue", basicProperties: null, body: body);
 
-                //Console.WriteLine(deviceMessage + " - sended");
+                logger.LogInformation("New device message sended!");
             }
             return true;
         }
@@ -167,7 +176,7 @@ namespace DataStorageWebApi.Services
                                                                                         x.EventDictId == eventParam.Key &&
                                                                                         x.Dt == deviceEvent.DateTime);
 
-                            
+
                             if (eventFromDb != null)
                             {
                                 var eventDict = await eventDictRepository.GetByIdAsync(eventFromDb.EventDictId);
@@ -177,7 +186,7 @@ namespace DataStorageWebApi.Services
                                     eventFromDb.EventDict = eventDict;
                                     NewEventMessage(eventFromDb);
                                 }
-                                
+
                             }
 
                         }
@@ -196,7 +205,7 @@ namespace DataStorageWebApi.Services
             }
             var factory = new ConnectionFactory()
             {
-                HostName = "localhost",
+                HostName = RMQHost,
                 Port = 5672,
                 UserName = "guest",
                 Password = "guest",
@@ -230,7 +239,7 @@ namespace DataStorageWebApi.Services
 
                 channel.BasicPublish(exchange: "", routingKey: "FromDataStorage-queue", basicProperties: null, body: body);
 
-                //Console.WriteLine(eventMessage + " - sended");
+                logger.LogInformation("New event message sended!");
             }
             return true;
         }

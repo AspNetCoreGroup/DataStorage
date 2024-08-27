@@ -13,6 +13,7 @@ namespace DataStorageWebApi.Controllers
     [Route("[controller]")]
     public class DataFromDeviceController : ControllerBase
     {
+        private readonly ILogger logger;
         private readonly IRepository<Device> deviceRepository;
         private readonly IRepository<DeviceType> deviceTypeRepository;
         private readonly IRepository<Event> eventRepository;
@@ -28,7 +29,8 @@ namespace DataStorageWebApi.Controllers
                                         IRepository<Archive> archiveRepository,
                                         IRepository<EventDict> eventDictRepository,
                                         IDataFromDeviceService dataFromDeviceService,
-                                        ITaskManager taskManager
+                                        ITaskManager taskManager,
+                                        ILogger<DataFromDeviceController> logger
                                         )
         {
             this.deviceRepository = deviceRepository;
@@ -37,13 +39,15 @@ namespace DataStorageWebApi.Controllers
             this.dataFromDeviceService = dataFromDeviceService;
             this.measurementRepository = measurementRepository;
             this.archiveRepository = archiveRepository;
-            this.eventDictRepository = eventDictRepository; 
+            this.eventDictRepository = eventDictRepository;
+            this.logger = logger;
             // this.taskManager = taskManager;
         }
 
         [HttpPost]
         public async Task<IActionResult> WriteDataFromDeviceAsync([FromBody] DeviceData deviceData)
         {
+            logger.LogInformation("Request WriteDataFromDeviceAsync...");
             // var task = Task.Run(async () =>
             await dataFromDeviceService.WriteToDbAsync(deviceData, deviceRepository, deviceTypeRepository, eventRepository, measurementRepository, archiveRepository, eventDictRepository);
             // );
@@ -60,7 +64,7 @@ namespace DataStorageWebApi.Controllers
         }
 
         [HttpGet("MeasurumentIdDescription")]
-        public async Task<ActionResult<List<MeasurumentIdDescription>>> MeasurumentIdDescription()
+        public ActionResult<List<MeasurumentIdDescription>> MeasurumentIdDescription()
         {
             var descriptions = dataFromDeviceService.GetMeasurumentIdDescriptions();
             return Ok(descriptions);

@@ -7,7 +7,8 @@ using DataStorageWebApi.TaskManager;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -24,6 +25,7 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 builder.Services.AddSingleton(typeof(ITaskManager), typeof(TaskManager));
 builder.Services.AddScoped(typeof(DbContext), typeof(EnergyContext));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+
 builder.Services.AddScoped(typeof(IDataFromDeviceService), typeof(DataFromDeviceService));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

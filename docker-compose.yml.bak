@@ -2,9 +2,9 @@ version: '3.8'
 
 services:
 
-  web:
-    container_name: 'webapi'
-    image: 'webapi'
+  datastorage:
+    container_name: 'datastorage'
+    image: 'datastorage'
     build:
       context: .
       dockerfile: Dockerfile
@@ -12,9 +12,10 @@ services:
      - "5000:5000"
     environment:
      - ASPNETCORE_ENVIRONMENT=Development
-     - ConnectionStrings__SQLConnectionString=Host=postgres;Port=5432;Database=energy;Username=postgres;Password=admin;
+     - ConnectionStrings__SQLConnectionString=Host=postgres;Port=5432;Database=energy;Username=postgres;Password=password;
     depends_on:
      - "postgres"
+     - "rabbitmq"
 
   postgres:
     image: postgres:latest

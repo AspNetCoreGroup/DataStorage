@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\CommonType\CommonTypeDevice.csproj" />
     <ProjectReference Include="..\DataStorageCore\DataStorageCore.csproj" />
     <ProjectReference Include="..\DataStorageDataAccess\DataStorageDataAccess.csproj" />
   </ItemGroup>
