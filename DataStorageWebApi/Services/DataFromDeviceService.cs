@@ -118,6 +118,7 @@ namespace DataStorageWebApi.Services
             var factory = new ConnectionFactory()
             {
                 HostName = RMQHost,
+                VirtualHost = "OtusProjectHost",
                 Port = 5672,
                 UserName = "guest",
                 Password = "guest",
@@ -137,15 +138,13 @@ namespace DataStorageWebApi.Services
                     Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                     WriteIndented = true
                 });
-                channel.QueueDeclare(queue: "FromDataStorage-queue",
-                                                 durable: true,
-                                                 autoDelete: false,
-                                                 exclusive: false,
-                                                 arguments: null);
 
                 var body = Encoding.UTF8.GetBytes(jsonString);
 
-                channel.BasicPublish(exchange: "", routingKey: "FromDataStorage-queue", basicProperties: null, body: body);
+                var basicProperties = channel.CreateBasicProperties();
+                basicProperties.ContentType = "DeviceMessage";
+
+                channel.BasicPublish(exchange: "DataStorageAll", routingKey: "FromDataStorage-queue", basicProperties: basicProperties, body: body);
 
                 logger.LogInformation("New device message sended!");
             }
@@ -206,6 +205,7 @@ namespace DataStorageWebApi.Services
             var factory = new ConnectionFactory()
             {
                 HostName = RMQHost,
+                VirtualHost = "OtusProjectHost",
                 Port = 5672,
                 UserName = "guest",
                 Password = "guest",
@@ -220,24 +220,20 @@ namespace DataStorageWebApi.Services
                     DeviceId = eventFromDb.DeviceId,
                     DeviceSerial = eventFromDb.Device.SerialNumber,
                     DeviceType = eventFromDb.Device.DeviceType.Name
-
-
-
                 };
+
                 string jsonString = JsonSerializer.Serialize(eventMessage, new JsonSerializerOptions
                 {
                     Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                     WriteIndented = true
                 });
-                channel.QueueDeclare(queue: "FromDataStorage-queue",
-                                                 durable: true,
-                                                 autoDelete: false,
-                                                 exclusive: false,
-                                                 arguments: null);
 
                 var body = Encoding.UTF8.GetBytes(jsonString);
 
-                channel.BasicPublish(exchange: "", routingKey: "FromDataStorage-queue", basicProperties: null, body: body);
+                var basicProperties = channel.CreateBasicProperties();
+                basicProperties.ContentType = "EventMessage";
+
+                channel.BasicPublish(exchange: "DataStorageAll", routingKey: "FromDataStorage-queue", basicProperties: basicProperties, body: body);
 
                 logger.LogInformation("New event message sended!");
             }
